@@ -15,3 +15,10 @@ management:
         hystrix:
             stream:
                 enabled: true
+    endpoints:
+        web:
+            cors:
+                allowed-origins: "*"
+            exposure:
+                include: "*"
+#                include: "hystrix.stream"

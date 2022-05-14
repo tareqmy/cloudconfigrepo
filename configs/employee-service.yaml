@@ -1,19 +1,16 @@
 eureka:
     client:
         service-url:
-            defaultZone: http://localhost:8761/eureka
-### Configures the application's credentials as metadata in Eureka so that the
-### Spring Boot Admin will be able to authenticate against Actuator security.
+            defaultZone: ${EUREKA_SERVER:http://localhost:8761/eureka}
+    ### Configures the application's credentials as metadata in Eureka so that the
+    ### Spring Boot Admin will be able to authenticate against Actuator security.
     instance:
         metadata-map:
-            user.name: admin
-            user.password: password
-server:
-    port: 8090
+            user.name: ${employee-service.security.username}
+            user.password: ${employee-service.security.password}
 
-ribbon:
-    eureka:
-        enabled: true
+server:
+    port: 8092
 
 management:
     endpoint:
@@ -28,7 +25,7 @@ management:
                 allowed-origins: "*"
             exposure:
                 include: "*"
-#                include: "hystrix.stream"
+                #                include: "hystrix.stream"
                 exclude: threaddump, heapdump
 
 spring:
@@ -39,16 +36,13 @@ spring:
         sampler:
             probability: 1
 
-springdoc:
-    swagger-ui:
-        enabled: true
-        path: '/openapi/ui/index.html'
-    api-docs:
-        path: '/api/v3/api-docs'
-        enabled: true
-
 # App Properties
-springcloudexamples:
+employee-service:
+    security:
+        username: admin
+        password: password
+        role: ADMIN
+        authorities: ROLE_ADMIN
     cors:
         allowed-origins: "http://localhost:8080"
         allowed-methods: "*"

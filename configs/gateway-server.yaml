@@ -11,11 +11,48 @@ spring:
                     '[/**]':
                         allowedOrigins: "*"
                         allowedMethods: "*"
+#            default-filters:
+#                -   name: GlobalFilter
+#                    args:
+#                        baseMessage: Spring Cloud Gateway GlobalFilter
+#                        preLogger: true
+#                        postLogger: true
             routes:
-                -   id: microservice
-                    uri: lb://microservice
+                -   id: employee-service
+                    uri: lb://employee-service
                     predicates:
-                        - Path=/**
+                        - Path=/employee/**
+                    filters:
+                        - RewritePath=/employee/(?<path>.*), /$\{path}
+                -   id: department-service
+                    uri: lb://department-service
+                    predicates:
+                        - Path=/department/**
+                    filters:
+                        - RewritePath=/department/(?<path>.*), /$\{path}
+                -   id: organization-service
+                    uri: lb://organization-service
+                    predicates:
+                        - Path=/organization/**
+                    filters:
+                        - RewritePath=/organization/(?<path>.*), /$\{path}
+
+                -   id: openapi
+                    uri: http://localhost:${server.port}
+                    predicates:
+                        - Path=/v3/api-docs/**
+                    filters:
+                        - RewritePath=/v3/api-docs/(?<path>.*), /$\{path}/v3/api-docs
+
+springdoc:
+    swagger-ui:
+        urls:
+            - name: employee
+              url: /v3/api-docs/employee
+            - name: department
+              url: /v3/api-docs/department
+            - name: organization
+              url: /v3/api-docs/organization
 
     # Zipkin info
     zipkin:
@@ -27,7 +64,11 @@ spring:
 eureka:
     client:
         service-url:
-            defaultZone: http://localhost:8761/eureka
+            defaultZone: ${EUREKA_SERVER:http://localhost:8761/eureka}
+
+ribbon:
+    eureka:
+        enabled: true
 
 server:
     port: 8080

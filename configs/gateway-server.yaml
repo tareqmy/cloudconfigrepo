@@ -1,11 +1,22 @@
 spring:
     application:
         name: gateway-server
+    security:
+        oauth2:
+            resourceserver:
+                jwt:
+                    issuer-uri: http://localhost:8880/auth/realms/spring-cloud-microservices-realm
+    redis:
+        password: eYVX7EwVmmxKPCDmwMtyKVge8oLd2t81
     cloud:
         gateway:
             discovery:
                 locator:
                     enabled: true
+                    lower-case-service-id: true
+#        loadbalancer:
+#            ribbon:
+#                enabled: false
             globalcors:
                 cors-configurations:
                     '[/**]':
@@ -24,18 +35,33 @@ spring:
                         - Path=/employee/**
                     filters:
                         - RewritePath=/employee/(?<path>.*), /$\{path}
+                        - name: RequestRateLimiter
+                          args:
+                              redis-rate-limiter.replenishRate: 1
+                              redis-rate-limiter.burstCapacity: 1
+                              redis-rate-limiter.requestedTokens: 1
                 -   id: department-service
                     uri: lb://department-service
                     predicates:
                         - Path=/department/**
                     filters:
                         - RewritePath=/department/(?<path>.*), /$\{path}
+                        - name: RequestRateLimiter
+                          args:
+                              redis-rate-limiter.replenishRate: 1
+                              redis-rate-limiter.burstCapacity: 1
+                              redis-rate-limiter.requestedTokens: 1
                 -   id: organization-service
                     uri: lb://organization-service
                     predicates:
                         - Path=/organization/**
                     filters:
                         - RewritePath=/organization/(?<path>.*), /$\{path}
+                        - name: RequestRateLimiter
+                          args:
+                              redis-rate-limiter.replenishRate: 1
+                              redis-rate-limiter.burstCapacity: 1
+                              redis-rate-limiter.requestedTokens: 1
 
                 -   id: openapi
                     uri: http://localhost:${server.port}
@@ -43,6 +69,33 @@ spring:
                         - Path=/v3/api-docs/**
                     filters:
                         - RewritePath=/v3/api-docs/(?<path>.*), /$\{path}/v3/api-docs
+
+    # Zipkin info
+    zipkin:
+        base-url: http://localhost:9411/
+    sleuth:
+        sampler:
+            probability: 1
+
+    logstash:
+        server: ${LOGSTASH_SERVER:localhost}
+        port: ${LOGSTASH_PORT:5000}
+
+management:
+    endpoint:
+        hystrix:
+            stream:
+                enabled: false
+        health:
+            show-details: always
+    endpoints:
+        web:
+            cors:
+                allowed-origins: "*"
+            exposure:
+                include: "*"
+                #                include: "hystrix.stream"
+                exclude: threaddump, heapdump
 
 springdoc:
     swagger-ui:
@@ -53,13 +106,6 @@ springdoc:
               url: /v3/api-docs/department
             - name: organization
               url: /v3/api-docs/organization
-
-    # Zipkin info
-    zipkin:
-        base-url: http://localhost:9411/
-    sleuth:
-        sampler:
-            probability: 1
 
 eureka:
     client:

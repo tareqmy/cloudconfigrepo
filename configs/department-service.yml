@@ -6,6 +6,21 @@ eureka:
 server:
     port: 8094
 
+management:
+    endpoint:
+        hystrix:
+            stream:
+                enabled: false
+        health:
+            show-details: always
+    endpoints:
+        web:
+            cors:
+                allowed-origins: "*"
+            exposure:
+                include: "*"
+                #                include: "hystrix.stream"
+                exclude: threaddump, heapdump
 
 spring:
     # Zipkin info
@@ -14,6 +29,16 @@ spring:
     sleuth:
         sampler:
             probability: 1
+
+    security:
+        oauth2:
+            resourceserver:
+                jwt:
+                    issuer-uri: http://localhost:8880/auth/realms/spring-cloud-microservices-realm
+
+    logstash:
+        server: ${LOGSTASH_SERVER:localhost}
+        port: ${LOGSTASH_PORT:5000}
 
 # App Properties
 department-service:

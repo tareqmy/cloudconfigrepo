@@ -22,6 +22,9 @@ spring:
                     '[/**]':
                         allowedOrigins: "*"
                         allowedMethods: "*"
+                        allowedHeaders: "*"
+            default-filters:
+                - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
 #            default-filters:
 #                -   name: GlobalFilter
 #                    args:
@@ -35,33 +38,33 @@ spring:
                         - Path=/employee/**
                     filters:
                         - RewritePath=/employee/(?<path>.*), /$\{path}
-                        - name: RequestRateLimiter
-                          args:
-                              redis-rate-limiter.replenishRate: 1
-                              redis-rate-limiter.burstCapacity: 1
-                              redis-rate-limiter.requestedTokens: 1
+                        -   name: RequestRateLimiter
+                            args:
+                                redis-rate-limiter.replenishRate: 10
+                                redis-rate-limiter.burstCapacity: 20
+                                redis-rate-limiter.requestedTokens: 1
                 -   id: department-service
                     uri: lb://department-service
                     predicates:
                         - Path=/department/**
                     filters:
                         - RewritePath=/department/(?<path>.*), /$\{path}
-                        - name: RequestRateLimiter
-                          args:
-                              redis-rate-limiter.replenishRate: 1
-                              redis-rate-limiter.burstCapacity: 1
-                              redis-rate-limiter.requestedTokens: 1
+                        -   name: RequestRateLimiter
+                            args:
+                                redis-rate-limiter.replenishRate: 10
+                                redis-rate-limiter.burstCapacity: 20
+                                redis-rate-limiter.requestedTokens: 1
                 -   id: organization-service
                     uri: lb://organization-service
                     predicates:
                         - Path=/organization/**
                     filters:
                         - RewritePath=/organization/(?<path>.*), /$\{path}
-                        - name: RequestRateLimiter
-                          args:
-                              redis-rate-limiter.replenishRate: 1
-                              redis-rate-limiter.burstCapacity: 1
-                              redis-rate-limiter.requestedTokens: 1
+                        -   name: RequestRateLimiter
+                            args:
+                                redis-rate-limiter.replenishRate: 10
+                                redis-rate-limiter.burstCapacity: 20
+                                redis-rate-limiter.requestedTokens: 1
 
                 -   id: openapi
                     uri: http://localhost:${server.port}
@@ -69,6 +72,14 @@ spring:
                         - Path=/v3/api-docs/**
                     filters:
                         - RewritePath=/v3/api-docs/(?<path>.*), /$\{path}/v3/api-docs
+
+        bus:
+            id: ${spring.application.name}:${spring.profiles.active}:${random.uuid}
+            enabled: true
+            refresh:
+                enabled: true
+            env:
+                enabled: true
 
     # Zipkin info
     zipkin:
@@ -80,6 +91,10 @@ spring:
     logstash:
         server: ${LOGSTASH_SERVER:localhost}
         port: ${LOGSTASH_PORT:5000}
+
+    rabbitmq:
+        host: ${RABBITMQ_HOST:localhost}
+        port: ${RABBITMQ_PORT:5672}
 
 management:
     endpoint:
@@ -100,12 +115,12 @@ management:
 springdoc:
     swagger-ui:
         urls:
-            - name: employee
-              url: /v3/api-docs/employee
-            - name: department
-              url: /v3/api-docs/department
-            - name: organization
-              url: /v3/api-docs/organization
+            -   name: employee
+                url: /v3/api-docs/employee
+            -   name: department
+                url: /v3/api-docs/department
+            -   name: organization
+                url: /v3/api-docs/organization
 
 eureka:
     client:
